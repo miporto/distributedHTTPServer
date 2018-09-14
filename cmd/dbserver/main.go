@@ -21,6 +21,7 @@ func handleConnection(c net.Conn) {
 		}
 
 		temp := strings.TrimSpace(string(netData))
+		fmt.Printf("Received %s from client %s\n", temp, c.RemoteAddr().String())
 		if temp == "STOP" {
 			c.Write([]byte("bye bye"))
 			break
@@ -30,6 +31,7 @@ func handleConnection(c net.Conn) {
 		c.Write([]byte(string(result)))
 	}
 	c.Close()
+	fmt.Printf("Closed connection with %s\n", c.RemoteAddr().String())
 }
 
 func main() {
