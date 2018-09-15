@@ -5,12 +5,14 @@ import (
 	"os"
 )
 
-func FileExists(filename string) bool {
-	return true
-}
-
 func SaveFile(filename string, body []byte) error {
-	return ioutil.WriteFile(filename, body, 0600)
+	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	_, err = fd.Write(body)
+	return err
 }
 
 func LoadFile(filename string) ([]byte, error) {
@@ -22,7 +24,13 @@ func LoadFile(filename string) ([]byte, error) {
 }
 
 func UpdateFile(filename string, body []byte) error {
-	return SaveFile(filename, body)
+	fd, err := os.OpenFile(filename, os.O_WRONLY|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	_, err = fd.Write(body)
+	return err
 }
 
 func DeleteFile(filename string) error {
