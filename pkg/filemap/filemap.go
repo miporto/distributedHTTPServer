@@ -5,19 +5,12 @@ import (
 	"sync"
 )
 
-const (
-	GET    = iota
-	POST   = iota
-	PUT    = iota
-	DELETE = iota
-)
-
 type FileMap struct {
 	sync.RWMutex
 	m map[string]sync.RWMutex
 }
 
-func (fm *FileMap) insert(filename string) (*sync.RWMutex, error) {
+func (fm *FileMap) Insert(filename string) (*sync.RWMutex, error) {
 	fm.Lock()
 	defer fm.Unlock()
 	if _, ok := fm.m[filename]; ok {
@@ -29,7 +22,7 @@ func (fm *FileMap) insert(filename string) (*sync.RWMutex, error) {
 	return &l, nil
 }
 
-func (fm *FileMap) get(filename string) (*sync.RWMutex, error) {
+func (fm *FileMap) Get(filename string) (*sync.RWMutex, error) {
 	fm.RLock()
 	defer fm.RUnlock()
 	if l, ok := fm.m[filename]; ok {
@@ -38,7 +31,7 @@ func (fm *FileMap) get(filename string) (*sync.RWMutex, error) {
 	return nil, errors.New("")
 }
 
-func (fm *FileMap) delete(filename string) (*sync.RWMutex, error) {
+func (fm *FileMap) Delete(filename string) (*sync.RWMutex, error) {
 	fm.Lock()
 	defer fm.Unlock()
 	if l, present := fm.m[filename]; present {
