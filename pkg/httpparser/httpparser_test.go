@@ -38,6 +38,20 @@ func TestGetURI(t *testing.T) {
 	}
 }
 
+func TestGetContentLength(t *testing.T) {
+	test := `POST /bin/login HTTP/1.1
+	Host: 127.0.0.1:8000
+	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 37
+	   
+	User=Peter+Lee&pw=123456&action=login`
+
+	res := GetContentLength(test)
+	if res != 37 {
+		t.Error("Expected ", 37, "got ", res)
+	}
+}
+
 //func TestGetHost(t *testing.T) {
 //	tests := []testpair{
 //		{ "GET /test/example/1 HTTP/1.1\nHost: example.net\n\n", "example.net"},
