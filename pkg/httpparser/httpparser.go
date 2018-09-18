@@ -5,10 +5,17 @@ import (
 	"strconv"
 )
 
+const (
+	MethodGet    = "GET"
+	MethodPost   = "POST"
+	MethodPut    = "PUT"
+	MethodDelete = "DELETE"
+)
+
 type HttpHeader struct {
-	method        string
-	uri           string
-	contentLength int
+	Method        string
+	Uri           string
+	ContentLength int
 }
 
 type HttpFrame struct {
