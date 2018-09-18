@@ -3,10 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
+	"github.com/manuporto/distributedHTTPServer/pkg/server"
 	"net"
 	"strings"
-
-	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
 )
 
 func readHeader(c net.Conn) (string, error) {
@@ -27,41 +27,56 @@ func readHeader(c net.Conn) (string, error) {
 	}
 }
 
+func handleGET(hf httpparser.HttpFrame) {
+
+}
+
+func handlePOST() {
+
+}
+
+func handlePUT() {
+
+}
+
+func handleDELETE() {
+
+}
+
 func handleConnection(c net.Conn) {
 	for {
 		header, err := readHeader(c)
 		if err != nil {
 			fmt.Println(err)
-			continue
+			break
 		}
 		if header == "STOP\n" {
 			fmt.Println("Stopping...")
 			break
 		}
 		fmt.Println(header)
-		fmt.Println(httpparser.GetMethod(header))
-		fmt.Println(httpparser.GetURI(header))
-		fmt.Println(httpparser.GetContentLength(header))
+		httpheader := httpparser.GetHeader(header)
+		body := make([]byte, httpheader.ContentLength)
+		read, err := bufio.NewReader(c).Read(body)
+
+		if read < len(body) || err != nil {
+			// TODO handle invalid http frame
+			fmt.Println(err)
+			continue
+		}
+		frame := httpparser.HttpFrame{httpheader, body}
+
+		switch httpheader.Method {
+		case httpparser.MethodGet:
+			handleGET(frame)
+		}
 	}
 	c.Close()
 }
 
 func main() {
-	l, err := net.Listen("tcp4", ":8080")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer l.Close()
-
-	for {
-		c, err := l.Accept()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		go handleConnection(c)
-	}
+	sv := server.Server{":8080", handleConnection}
+	sv.Serve()
 }
 
 // func main() {
