@@ -3,10 +3,14 @@ package filemanager
 import (
 	"io/ioutil"
 	"os"
+	"path"
 )
 
-func SaveFile(filename string, body []byte) error {
-	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
+func SaveFile(filepath string, body []byte) error {
+	dir, file := path.Split(filepath)
+	file = file + ".json"
+	os.MkdirAll(dir, os.ModePerm)
+	fd, err := os.OpenFile(path.Join(dir, file), os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err
 	}
