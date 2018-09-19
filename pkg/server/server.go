@@ -6,13 +6,13 @@ import (
 )
 
 type Server struct {
-	address string
-	handler func(net.Conn)
+	Address string
+	Handler func(net.Conn)
 }
 
 func (s Server) Serve() {
 
-	l, err := net.Listen("tcp4", s.address)
+	l, err := net.Listen("tcp4", s.Address)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -25,6 +25,6 @@ func (s Server) Serve() {
 			fmt.Println(err)
 			return
 		}
-		go s.handler(c)
+		go s.Handler(c)
 	}
 }
