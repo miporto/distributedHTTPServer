@@ -10,6 +10,10 @@ const (
 	MethodPost   = "POST"
 	MethodPut    = "PUT"
 	MethodDelete = "DELETE"
+
+	methodRegex  = `^GET|POST|PUT|DELETE`
+	uriRegex     = `/[a-z]+/[a-z]+/[0-9]+`
+	clengthRegex = `Content-Length:\s([0-9]+)`
 )
 
 type HttpHeader struct {
@@ -19,8 +23,12 @@ type HttpHeader struct {
 }
 
 type HttpFrame struct {
-	header HttpHeader
-	body   []byte
+	Header HttpHeader
+	Body   []byte
+}
+
+func (hh HttpHeader) IsValid() bool {
+	return len(hh.Method) > 0 && len(hh.Uri) > 0
 }
 
 func find(pattern string, s string) string {
@@ -32,20 +40,25 @@ func findSubmatch(pattern string, s string) []string {
 	r := regexp.MustCompile(pattern)
 	return r.FindStringSubmatch(s)
 }
+
+func matchs(pattern string, s string) bool {
+	r := regexp.MustCompile(pattern)
+	return r.MatchString(s)
+}
+
 func GetMethod(s string) string {
-	return find(`^[A-Z]+\b`, s)
+	return find(`^GET|POST|PUT|DELETE`, s)
 }
 
 func GetURI(s string) string {
 	return find(`/[a-z]+/[a-z]+/[0-9]+`, s)
 }
 
-func GetHost(s string) string {
-	return find(`^Host:\s([a-z]+:*[0-9]*)`, s)
-}
-
 func GetContentLength(s string) int {
-	l, _ := strconv.Atoi(findSubmatch(`Content-Length:\s([0-9]+)`, s)[1])
+	if !matchs(clengthRegex, s) {
+		return 0
+	}
+	l, _ := strconv.Atoi(findSubmatch(clengthRegex, s)[1])
 	return l
 }
 
