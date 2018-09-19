@@ -51,17 +51,3 @@ func TestGetContentLength(t *testing.T) {
 		t.Error("Expected ", 37, "got ", res)
 	}
 }
-
-//func TestGetHost(t *testing.T) {
-//	tests := []testpair{
-//		{ "GET /test/example/1 HTTP/1.1\nHost: example.net\n\n", "example.net"},
-//		{ "DELETE /test/example/1 HTTP/1.1\nHost: localhost:8080\n\n", "localhost:8080"},
-//		{"POST /test/example/1 HTTP/1.1\nHost: 127.0.0.1:8080\nContent-Type: application/json\n\n", "127.0.0.1:8080"},
-//	}
-//	for _, pair := range tests {
-//		res := GetHost(pair.val)
-//		if res != pair.exp {
-//			t.Error("For ", pair.val, " expected ", pair.exp, "got ", res)
-//		}
-//	}
-//}
