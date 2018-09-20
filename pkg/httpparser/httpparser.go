@@ -47,11 +47,11 @@ func matchs(pattern string, s string) bool {
 }
 
 func GetMethod(s string) string {
-	return find(`^GET|POST|PUT|DELETE`, s)
+	return find(methodRegex, s)
 }
 
 func GetURI(s string) string {
-	return find(`/[a-z]+/[a-z]+/[0-9]+`, s)
+	return find(uriRegex, s)
 }
 
 func GetContentLength(s string) int {
