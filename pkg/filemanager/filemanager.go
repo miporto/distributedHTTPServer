@@ -63,6 +63,7 @@ func (fm FileManager) Delete(filepath string) error {
 		return err
 	}
 	fm.cch.Delete(filepath)
+	return nil
 }
 
 func SaveFile(filepath string, body []byte) error {
