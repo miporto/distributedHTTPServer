@@ -44,3 +44,12 @@ func (c Cache) Update(path string, body []byte) {
 	slot.path = path
 	slot.body = body
 }
+
+func (c Cache) Delete(path string) {
+	pathHash := util.CalculateHash(path)
+	slot := c.slots[pathHash%c.size]
+	slot.Lock()
+	defer slot.Unlock()
+	slot.path = ""
+	slot.body = nil
+}
