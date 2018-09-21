@@ -10,6 +10,10 @@ type Server struct {
 	Handler func(net.Conn)
 }
 
+func NewServer(address string, handler func(net.Conn)) Server {
+	return Server{address, handler}
+}
+
 func (s Server) Serve() {
 
 	l, err := net.Listen("tcp4", s.Address)
