@@ -28,8 +28,8 @@ func readHeader(r *bufio.Reader) (string, error) {
 	}
 }
 
-func readBody(r *bufio.Reader, hh httpparser.HttpHeader) ([]byte, error) {
-	body := make([]byte, hh.ContentLength)
+func readBody(r *bufio.Reader, size int) ([]byte, error) {
+	body := make([]byte, size)
 	// TODO handle read < body
 	_, err := r.Read(body)
 	return body, err
@@ -43,7 +43,7 @@ func readRequest(c net.Conn) (*httpparser.HttpFrame, error) {
 		return nil, err
 	}
 	httpheader := httpparser.GetHeader(header)
-	body, err := readBody(r, httpheader)
+	body, err := readBody(r, httpheader.ContentLength)
 	return &httpparser.HttpFrame{Header: httpheader, Body: body}, err
 }
 
