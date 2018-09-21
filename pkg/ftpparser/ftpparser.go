@@ -1,33 +1,32 @@
 package ftpparser
 
 const (
-	methodGET = iota
-	methodPOST = iota
-	methodPUT = iota
+	methodGET    = iota
+	methodPOST   = iota
+	methodPUT    = iota
 	methodDELETE = iota
-	methodRESP = iota
+	methodRESP   = iota
 
-	statusOK = 200
-	statusNotFound = 404
-	statusFileExists = 410 //Review
+	statusOK          = 200
+	statusNotFound    = 404
+	statusFileExists  = 410 //Review
 	statusServerError = 500
-
 )
 
 type FTPPacket struct {
-	method int
+	method  int
 	pathLen int
-	path string
+	path    string
 	bodyLen int
-	body []byte
+	body    []byte
 }
 
 type FTPResponse struct {
-	status int
+	status   int
 	svMsgLen int
-	svMsg string
-	pathLen int
-	path string
-	bodyLen int
-	body []byte
+	svMsg    string
+	pathLen  int
+	path     string
+	bodyLen  int
+	body     []byte
 }
