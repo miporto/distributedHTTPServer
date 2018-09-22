@@ -11,7 +11,7 @@ import (
 )
 
 func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
-	body, err := fm.Load(req.Header.Uri)
+	body, err := fm.Load(req.Header.URI)
 	if err != nil {
 		fmt.Println("Error in get: ", err)
 	}
@@ -24,9 +24,25 @@ func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManage
 }
 
 func handlePOST(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
-	err := fm.Save(req.Header.Uri, req.Body)
+	err := fm.Save(req.Header.URI, req.Body)
 	if err != nil {
-		fmt.Println("Error in get: ", err)
+		fmt.Println("Error in post: ", err)
+	}
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+}
+
+func handlePUT(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	err := fm.Update(req.Header.URI, req.Body)
+	if err != nil {
+		fmt.Println("Error in put: ", err)
+	}
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+}
+
+func handleDELETE(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	err := fm.Delete(req.Header.URI)
+	if err != nil {
+		fmt.Println("Error in delete: ", err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
 }
@@ -41,13 +57,17 @@ func handleConnection(c net.Conn, fm *filemanager.FileManager) {
 		c.Write([]byte(err.Error()))
 		return
 	}
-	req.Header.Uri = req.Header.Uri[1:] + ".json"
+	req.Header.URI = req.Header.URI[1:] + ".json"
 
 	switch req.Header.Method {
 	case httpparser.MethodGet:
 		handleGET(c, req, fm)
 	case httpparser.MethodPost:
 		handlePOST(c, req, fm)
+	case httpparser.MethodPut:
+		handlePUT(c, req, fm)
+	case httpparser.MethodDelete:
+		handleDELETE(c, req, fm)
 	}
 }
 

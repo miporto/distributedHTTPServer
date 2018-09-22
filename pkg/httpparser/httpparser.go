@@ -31,12 +31,15 @@ const (
 )
 
 type HttpHeader struct {
+	Status        string
 	Method        string
-	Uri           string
+	URI           string
+	ContentType   string
 	ContentLength int
 }
 
 type HttpFrame struct {
+	Raw    string
 	Header HttpHeader
 	Body   []byte
 }
@@ -49,7 +52,7 @@ type HttpResponse struct {
 }
 
 func (hh HttpHeader) IsValid() bool {
-	return len(hh.Method) > 0 && len(hh.Uri) > 0
+	return len(hh.Method) > 0 && len(hh.URI) > 0
 }
 
 func find(pattern string, s string) string {
@@ -65,6 +68,10 @@ func findSubmatch(pattern string, s string) []string {
 func matchs(pattern string, s string) bool {
 	r := regexp.MustCompile(pattern)
 	return r.MatchString(s)
+}
+
+func getStatus(s string) string {
+	return ""
 }
 
 func GetMethod(s string) string {
@@ -84,5 +91,11 @@ func GetContentLength(s string) int {
 }
 
 func GetHeader(s string) HttpHeader {
-	return HttpHeader{GetMethod(s), GetURI(s), GetContentLength(s)}
+	return HttpHeader{
+		Status:        "",
+		Method:        GetMethod(s),
+		URI:           GetURI(s),
+		ContentType:   "",
+		ContentLength: GetContentLength(s),
+	}
 }
