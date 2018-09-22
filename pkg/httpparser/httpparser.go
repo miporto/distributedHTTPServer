@@ -17,6 +17,7 @@ const (
 	StatusOK                  = "200 OK"
 	StatusBadRequest          = "400 Bad Request"
 	StatusNotFound            = "404 Not Found"
+	StatusConflict            = "409 Conflict"
 	StatusInternalServerError = "500 Internal Server Error"
 
 	ContentTypeResHeader   = "Content-Type: "
