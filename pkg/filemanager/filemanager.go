@@ -1,11 +1,13 @@
 package filemanager
 
 import (
-	"github.com/manuporto/distributedHTTPServer/pkg/cache"
-	"github.com/manuporto/distributedHTTPServer/pkg/lockpool"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/manuporto/distributedHTTPServer/pkg/cache"
+	"github.com/manuporto/distributedHTTPServer/pkg/lockpool"
 )
 
 type FileManager struct {
@@ -22,7 +24,7 @@ func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
 func (fm FileManager) Save(filepath string, body []byte) error {
 	l := fm.lp.GetLock(filepath)
 	l.Lock()
-	SaveFile(filepath, body)
+	saveFile(filepath, body)
 	l.Unlock()
 	return nil
 }
@@ -34,7 +36,7 @@ func (fm FileManager) Load(filepath string) ([]byte, error) {
 	l := fm.lp.GetLock(filepath)
 	l.RLock()
 	defer l.RUnlock()
-	body, err := LoadFile(filepath)
+	body, err := loadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +48,7 @@ func (fm FileManager) Update(filepath string, body []byte) error {
 	l := fm.lp.GetLock(filepath)
 	l.Lock()
 	defer l.Unlock()
-	err := UpdateFile(filepath, body)
+	err := updateFile(filepath, body)
 	if err != nil {
 		return err
 	}
@@ -66,19 +68,20 @@ func (fm FileManager) Delete(filepath string) error {
 	return nil
 }
 
-func SaveFile(filepath string, body []byte) error {
+func saveFile(filepath string, body []byte) error {
 	dir, file := path.Split(filepath)
 	os.MkdirAll(dir, os.ModePerm)
-	fd, err := os.OpenFile(path.Join(dir, file), os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
+	fd, err := os.OpenFile(path.Join(dir, file), os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
+		fmt.Println("ERROR: ", err)
 		return err
 	}
-	defer fd.Close()
 	_, err = fd.Write(body)
+	fd.Close()
 	return err
 }
 
-func LoadFile(filename string) ([]byte, error) {
+func loadFile(filename string) ([]byte, error) {
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -86,7 +89,7 @@ func LoadFile(filename string) ([]byte, error) {
 	return body, nil
 }
 
-func UpdateFile(filename string, body []byte) error {
+func updateFile(filename string, body []byte) error {
 	fd, err := os.OpenFile(filename, os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
@@ -94,8 +97,4 @@ func UpdateFile(filename string, body []byte) error {
 	defer fd.Close()
 	_, err = fd.Write(body)
 	return err
-}
-
-func DeleteFile(filename string) error {
-	return os.Remove(filename)
 }
