@@ -6,10 +6,24 @@ import (
 )
 
 const (
+	Version = "HTTP/1.1"
+	Delim   = "\r\n"
+
 	MethodGet    = "GET"
 	MethodPost   = "POST"
 	MethodPut    = "PUT"
 	MethodDelete = "DELETE"
+
+	StatusOK                  = "200 OK"
+	StatusBadRequest          = "400 Bad Request"
+	StatusNotFound            = "404 Not Found"
+	StatusInternalServerError = "500 Internal Server Error"
+
+	ContentTypeResHeader   = "Content-Type: "
+	ContentLengthResHeader = "Content-Length: "
+	ConnectionHeader       = "Connection: Close"
+
+	JSONContentType = "application/json"
 
 	methodRegex  = `^GET|POST|PUT|DELETE`
 	uriRegex     = `/[a-z]+/[a-z]+/[0-9]+`
@@ -25,6 +39,13 @@ type HttpHeader struct {
 type HttpFrame struct {
 	Header HttpHeader
 	Body   []byte
+}
+
+type HttpResponse struct {
+	Status        string
+	ContentType   string
+	ContentLength int
+	Body          []byte
 }
 
 func (hh HttpHeader) IsValid() bool {
