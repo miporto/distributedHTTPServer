@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/manuporto/distributedHTTPServer/pkg/ftpparser"
 	"github.com/manuporto/distributedHTTPServer/pkg/httpserver"
 
-	"github.com/manuporto/distributedHTTPServer/pkg/ftpclient"
 	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
 	"github.com/manuporto/distributedHTTPServer/pkg/server"
 )
 
-func fowardRequest(req *httpparser.HttpFrame) *ftpparser.FTPResponse {
-	ftpClient, _ := ftpclient.Connect("address")
-	defer ftpClient.Close()
-	ftpClient.Send(ftpparser.HTTPToFTP(req))
-	return ftpClient.Receive()
+func fowardRequest(req *httpparser.HttpFrame) (*httpparser.HttpFrame, error) {
+	c, err := net.Dial("tcp4", ":8081")
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	defer c.Close()
+	c.Write([]byte(req.Raw))
+	return httpserver.ReadRequest(c)
 }
 
 func handleConnection(c net.Conn) {
@@ -29,8 +31,8 @@ func handleConnection(c net.Conn) {
 		c.Write([]byte(err.Error()))
 		return
 	}
-	fowardRequest(req)
-	c.Write([]byte("HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n"))
+	res, err := fowardRequest(req)
+	c.Write([]byte(res.Raw))
 }
 
 func main() {
