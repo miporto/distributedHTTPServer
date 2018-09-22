@@ -35,6 +35,6 @@ type FTPResponse struct {
 	body   []byte
 }
 
-func HTTPToFTP(hf httpparser.HttpFrame) FTPPacket {
-	return FTPPacket{methods[hf.Header.Method], hf.Header.Uri, hf.Body}
+func HTTPToFTP(hf *httpparser.HttpFrame) *FTPPacket {
+	return &FTPPacket{methods[hf.Header.Method], hf.Header.Uri, hf.Body}
 }
