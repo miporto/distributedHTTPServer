@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/manuporto/distributedHTTPServer/pkg/filemanager"
 	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
@@ -11,12 +12,19 @@ import (
 )
 
 func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	status := httpparser.StatusOK
 	body, err := fm.Load(req.Header.URI)
 	if err != nil {
+		if os.IsNotExist(err) {
+			status = httpparser.StatusNotFound
+		} else {
+			status = httpparser.StatusInternalServerError
+			body = []byte(err.Error())
+		}
 		fmt.Println("Error in get: ", err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{
-		Status:        httpparser.StatusOK,
+		Status:        status,
 		ContentType:   httpparser.JSONContentType,
 		ContentLength: len(body),
 		Body:          body})
@@ -24,27 +32,54 @@ func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManage
 }
 
 func handlePOST(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	status := httpparser.StatusOK
+	var body []byte
+	fmt.Println("saving...")
 	err := fm.Save(req.Header.URI, req.Body)
+	fmt.Println("saved with err: ", err)
 	if err != nil {
+		if os.IsExist(err) {
+			status = httpparser.StatusConflict
+		} else {
+			status = httpparser.StatusInternalServerError
+		}
+		body = []byte(err.Error())
 		fmt.Println("Error in post: ", err)
 	}
-	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
 
 func handlePUT(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	status := httpparser.StatusOK
+	var body []byte
 	err := fm.Update(req.Header.URI, req.Body)
 	if err != nil {
+		if os.IsNotExist(err) {
+			status = httpparser.StatusNotFound
+		} else {
+			status = httpparser.StatusInternalServerError
+			body = []byte(err.Error())
+		}
 		fmt.Println("Error in put: ", err)
 	}
-	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
 
 func handleDELETE(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	status := httpparser.StatusOK
+	var body []byte
 	err := fm.Delete(req.Header.URI)
 	if err != nil {
+		if os.IsNotExist(err) {
+			status = httpparser.StatusNotFound
+			fmt.Println(status)
+		} else {
+			status = httpparser.StatusInternalServerError
+			body = []byte(err.Error())
+		}
 		fmt.Println("Error in delete: ", err)
 	}
-	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
 
 func handleConnection(c net.Conn, fm *filemanager.FileManager) {
