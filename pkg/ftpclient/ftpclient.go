@@ -19,16 +19,16 @@ func Connect(address string) (*FTPClient, error) {
 	return &FTPClient{conn}, nil
 }
 
-func (fc FTPClient) Send(p ftpparser.FTPPacket) {
+func (fc FTPClient) Send(p *ftpparser.FTPPacket) {
 	encoder := gob.NewEncoder(fc.conn)
 	encoder.Encode(p)
 }
 
-func (fc FTPClient) Receive() ftpparser.FTPResponse {
+func (fc FTPClient) Receive() *ftpparser.FTPResponse {
 	decoder := gob.NewDecoder(fc.conn)
 	res := &ftpparser.FTPResponse{}
 	decoder.Decode(res)
-	return *res
+	return res
 }
 
 func (fc FTPClient) Close() {
