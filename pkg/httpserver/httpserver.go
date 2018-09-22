@@ -40,6 +40,7 @@ func readBody(r *bufio.Reader, size int) ([]byte, error) {
 
 func ReadRequest(c net.Conn) (*httpparser.HttpFrame, error) {
 	r := bufio.NewReader(c)
+	var rawFrame strings.Builder
 	header, err := readHeader(r)
 	fmt.Print(header)
 	if err != nil {
@@ -47,7 +48,9 @@ func ReadRequest(c net.Conn) (*httpparser.HttpFrame, error) {
 	}
 	httpheader := httpparser.GetHeader(header)
 	body, err := readBody(r, httpheader.ContentLength)
-	return &httpparser.HttpFrame{Header: httpheader, Body: body}, err
+	rawFrame.WriteString(header)
+	rawFrame.WriteString(string(body))
+	return &httpparser.HttpFrame{Raw: rawFrame.String(), Header: httpheader, Body: body}, err
 }
 
 func WriteResponse(c net.Conn, res *httpparser.HttpResponse) {
