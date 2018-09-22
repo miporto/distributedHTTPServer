@@ -1,61 +1,74 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"math/rand"
 	"net"
-	"os"
-	"strconv"
-	"strings"
-	"time"
+
+	"github.com/manuporto/distributedHTTPServer/pkg/filemanager"
+	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
+
+	"github.com/manuporto/distributedHTTPServer/pkg/httpserver"
 )
 
-func handleConnection(c net.Conn) {
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
-	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		temp := strings.TrimSpace(string(netData))
-		fmt.Printf("Received %s from client %s\n", temp, c.RemoteAddr().String())
-		if temp == "STOP" {
-			c.Write([]byte("bye bye"))
-			break
-		}
-
-		result := strconv.Itoa(rand.Int()) + "\n"
-		c.Write([]byte(string(result)))
+func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	body, err := fm.Load(req.Header.Uri)
+	if err != nil {
+		fmt.Println("Error in get: ", err)
 	}
-	c.Close()
-	fmt.Printf("Closed connection with %s\n", c.RemoteAddr().String())
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{
+		Status:        httpparser.StatusOK,
+		ContentType:   httpparser.JSONContentType,
+		ContentLength: len(body),
+		Body:          body})
+
+}
+
+func handlePOST(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
+	err := fm.Save(req.Header.Uri, req.Body)
+	if err != nil {
+		fmt.Println("Error in get: ", err)
+	}
+	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusOK})
+}
+
+func handleConnection(c net.Conn, fm *filemanager.FileManager) {
+	defer c.Close()
+	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+	req, err := httpserver.ReadRequest(c)
+	if err != nil {
+		// TODO handle error
+		fmt.Println("Closing: ", err)
+		c.Write([]byte(err.Error()))
+		return
+	}
+	req.Header.Uri = req.Header.Uri[1:] + ".json"
+
+	switch req.Header.Method {
+	case httpparser.MethodGet:
+		handleGET(c, req, fm)
+	case httpparser.MethodPost:
+		handlePOST(c, req, fm)
+	}
 }
 
 func main() {
-	arguments := os.Args
-	if len(arguments) == 1 {
-		fmt.Println("Please provide a port number!")
-		return
-	}
-
-	PORT := ":" + arguments[1]
-	l, err := net.Listen("tcp4", PORT)
+	address := ":8081"
+	lockpoolSize := uint(10)
+	cacheSize := uint(10)
+	l, err := net.Listen("tcp4", address)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer l.Close()
-	rand.Seed(time.Now().Unix())
 
+	fm := filemanager.NewFileManager(lockpoolSize, cacheSize)
 	for {
 		c, err := l.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go handleConnection(c)
+		go handleConnection(c, &fm)
 	}
 }
