@@ -3,9 +3,12 @@ FROM golang:alpine
 WORKDIR /go/src/webserver
 COPY . .
 
+#Install git
+RUN apk add --update git
+
 RUN go get -d -v ./...
 RUN go install -v ./...
 
 EXPOSE 8080
 
-CMD ["webserver"]
+CMD ["webserver", ":8080"]
