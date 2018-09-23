@@ -3,8 +3,11 @@ FROM golang:alpine
 WORKDIR /go/src/dbserver
 COPY . .
 
+#Install git
+RUN apk add --update git
+
 RUN go get -d -v ./...
 RUN go install -v ./...
 
 
-CMD ["dbserver", "8080"]
+CMD ["dbserver", ":8081", "10", "10"]

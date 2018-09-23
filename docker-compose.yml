@@ -4,6 +4,10 @@ services:
     build:
       context: .
       dockerfile: webServerDockerfile
+    environment:
+      - DBSRVNAME=distributedhttpserver_db_
+      - DBSRVPORT=:8081
+      - DBSRVS=2
     depends_on:
       - db
     ports:

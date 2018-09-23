@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/manuporto/distributedHTTPServer/pkg/filemanager"
 	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
@@ -105,17 +106,20 @@ func handleConnection(c net.Conn, fm *filemanager.FileManager) {
 }
 
 func main() {
-	address := ":8081"
-	lockpoolSize := uint(10)
-	cacheSize := uint(10)
-	l, err := net.Listen("tcp4", address)
+	if len(os.Args) != 4 {
+		fmt.Println("Wrong number of args\n Usage: ./dbserver <address>")
+		return
+	}
+	lockpoolSize, _ := strconv.Atoi(os.Args[2])
+	cacheSize, _ := strconv.Atoi(os.Args[3])
+	l, err := net.Listen("tcp4", os.Args[1])
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer l.Close()
 
-	fm := filemanager.NewFileManager(lockpoolSize, cacheSize)
+	fm := filemanager.NewFileManager(uint(lockpoolSize), uint(cacheSize))
 	for {
 		c, err := l.Accept()
 		if err != nil {
