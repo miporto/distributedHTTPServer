@@ -24,6 +24,7 @@ func (fm FileManager) Save(filepath string, body []byte) error {
 	l := fm.lp.GetLock(filepath)
 	l.Lock()
 	err := saveFile(filepath, body)
+	fm.cch.Update(filepath, body)
 	l.Unlock()
 	return err
 }
@@ -39,7 +40,7 @@ func (fm FileManager) Load(filepath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fm.cch.Update(filepath, body) // OJO
+	fm.cch.Update(filepath, body)
 	return body, nil
 }
 
