@@ -34,9 +34,7 @@ func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManage
 func handlePOST(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManager) {
 	status := httpparser.StatusOK
 	var body []byte
-	fmt.Println("saving...")
 	err := fm.Save(req.Header.URI, req.Body)
-	fmt.Println("saved with err: ", err)
 	if err != nil {
 		if os.IsExist(err) {
 			status = httpparser.StatusConflict

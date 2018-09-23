@@ -1,7 +1,6 @@
 package filemanager
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -24,9 +23,9 @@ func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
 func (fm FileManager) Save(filepath string, body []byte) error {
 	l := fm.lp.GetLock(filepath)
 	l.Lock()
-	saveFile(filepath, body)
+	err := saveFile(filepath, body)
 	l.Unlock()
-	return nil
+	return err
 }
 
 func (fm FileManager) Load(filepath string) ([]byte, error) {
@@ -73,7 +72,6 @@ func saveFile(filepath string, body []byte) error {
 	os.MkdirAll(dir, os.ModePerm)
 	fd, err := os.OpenFile(path.Join(dir, file), os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
-		fmt.Println("ERROR: ", err)
 		return err
 	}
 	_, err = fd.Write(body)
