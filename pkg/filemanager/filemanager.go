@@ -70,7 +70,7 @@ func (fm FileManager) Delete(filepath string) error {
 func saveFile(filepath string, body []byte) error {
 	dir, file := path.Split(filepath)
 	os.MkdirAll(dir, os.ModePerm)
-	fd, err := os.OpenFile(path.Join(dir, file), os.O_CREATE|os.O_EXCL, 0600)
+	fd, err := os.OpenFile(path.Join(dir, file), os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err
 	}
