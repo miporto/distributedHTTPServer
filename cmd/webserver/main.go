@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -23,7 +24,6 @@ func calculateDestServer(uri string, dbServerName string, port string, numOfDbSe
 func fowardRequest(req *httpparser.HttpFrame, address string) (*httpparser.HttpFrame, error) {
 	c, err := net.Dial("tcp4", address)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	defer c.Close()
@@ -33,13 +33,15 @@ func fowardRequest(req *httpparser.HttpFrame, address string) (*httpparser.HttpF
 
 func handleConnection(c net.Conn) {
 	defer c.Close()
-	log := logger.GetInstance()
-	log.Info(fmt.Sprintf("Serving %s", c.RemoteAddr().String()))
+	log2 := logger.GetInstance()
+	log2.Info(fmt.Sprintf("Serving %s", c.RemoteAddr().String()))
+	log.Printf("Serving %s", c.RemoteAddr().String())
 	req, err := httpserver.ReadRequest(c)
-	if err != nil {
-		// TODO handle error
-		log.Error(fmt.Sprintf("Closing %s because of error: %s", c.RemoteAddr().String(), err.Error()))
-		c.Write([]byte(err.Error()))
+	if err != nil || !req.IsValid() {
+		log.Println("Closing due to invalid HTTP request: ", req.Raw)
+		log2.Error(fmt.Sprintf("Closing due to invalid HTTP request: %s from %s",
+			req.Raw, c.RemoteAddr().String()))
+		httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusBadRequest})
 		return
 	}
 
@@ -50,8 +52,13 @@ func handleConnection(c net.Conn) {
 		dbServerName,
 		os.Getenv("DBSRVPORT"),
 		numOfDbServers)
-	log.Info(fmt.Sprintf("HTTP Request: %s withh destination: %s", req.Raw, destServer))
+	log2.Info(fmt.Sprintf("HTTP Request: %s with destination: %s", req.Raw, destServer))
+	log.Printf("HTTP Request: %s with destination: %s", req.Raw, destServer)
 	res, err := fowardRequest(req, destServer)
+	if err != nil {
+		log2.Error(err.Error())
+		return
+	}
 	c.Write([]byte(res.Raw))
 }
 
