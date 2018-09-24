@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -42,7 +41,6 @@ func ReadRequest(c net.Conn) (*httpparser.HttpFrame, error) {
 	r := bufio.NewReader(c)
 	var rawFrame strings.Builder
 	header, err := readHeader(r)
-	fmt.Print(header)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +52,6 @@ func ReadRequest(c net.Conn) (*httpparser.HttpFrame, error) {
 }
 
 func WriteResponse(c net.Conn, res *httpparser.HttpResponse) {
-	fmt.Println(*res)
 	var stringRes strings.Builder
 	stringRes.WriteString(httpparser.Version)
 	stringRes.WriteString(" ")
