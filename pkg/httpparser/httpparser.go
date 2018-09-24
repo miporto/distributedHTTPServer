@@ -27,7 +27,7 @@ const (
 	JSONContentType = "application/json"
 
 	methodRegex  = `^GET|POST|PUT|DELETE`
-	uriRegex     = `/[a-z]+/[a-z]+/[0-9]+`
+	uriRegex     = `\s/(.+/.+/[0-9]+)\s`
 	clengthRegex = `Content-Length:\s([0-9]+)`
 )
 
@@ -52,8 +52,8 @@ type HttpResponse struct {
 	Body          []byte
 }
 
-func (hh HttpHeader) IsValid() bool {
-	return len(hh.Method) > 0 && len(hh.URI) > 0
+func (hh HttpFrame) IsValid() bool {
+	return len(hh.Header.Method) > 0 && len(hh.Header.URI) > 0
 }
 
 func find(pattern string, s string) string {
@@ -71,16 +71,15 @@ func matchs(pattern string, s string) bool {
 	return r.MatchString(s)
 }
 
-func getStatus(s string) string {
-	return ""
-}
-
 func GetMethod(s string) string {
 	return find(methodRegex, s)
 }
 
 func GetURI(s string) string {
-	return find(uriRegex, s)
+	if !matchs(clengthRegex, s) {
+		return ""
+	}
+	return findSubmatch(uriRegex, s)[1]
 }
 
 func GetContentLength(s string) int {
