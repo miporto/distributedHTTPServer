@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/manuporto/distributedHTTPServer/pkg/httpserver"
-	"github.com/manuporto/distributedHTTPServer/pkg/util"
 	"net"
 	"os"
 	"strconv"
+
+	"github.com/manuporto/distributedHTTPServer/pkg/httpserver"
+	"github.com/manuporto/distributedHTTPServer/pkg/logger"
+	"github.com/manuporto/distributedHTTPServer/pkg/util"
 
 	"github.com/manuporto/distributedHTTPServer/pkg/httpparser"
 	"github.com/manuporto/distributedHTTPServer/pkg/server"
@@ -31,11 +33,12 @@ func fowardRequest(req *httpparser.HttpFrame, address string) (*httpparser.HttpF
 
 func handleConnection(c net.Conn) {
 	defer c.Close()
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+	log := logger.GetInstance()
+	log.Info(fmt.Sprintf("Serving %s", c.RemoteAddr().String()))
 	req, err := httpserver.ReadRequest(c)
 	if err != nil {
 		// TODO handle error
-		fmt.Println("Closing: ", err)
+		log.Error(fmt.Sprintf("Closing %s because of error: %s", c.RemoteAddr().String(), err.Error()))
 		c.Write([]byte(err.Error()))
 		return
 	}
@@ -47,7 +50,7 @@ func handleConnection(c net.Conn) {
 		dbServerName,
 		os.Getenv("DBSRVPORT"),
 		numOfDbServers)
-	fmt.Println("Destination: ", destServer)
+	log.Info(fmt.Sprintf("HTTP Request: %s withh destination: %s", req.Raw, destServer))
 	res, err := fowardRequest(req, destServer)
 	c.Write([]byte(res.Raw))
 }
@@ -57,6 +60,7 @@ func main() {
 		fmt.Println("Wrong number of args\n Usage: ./dbserver <address>")
 		return
 	}
+	logger.NewLogger("log.txt")
 	sv := server.NewServer(os.Args[1], handleConnection)
 	sv.Serve()
 }
