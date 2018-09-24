@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -22,7 +23,7 @@ func handleGET(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManage
 			status = httpparser.StatusInternalServerError
 			body = []byte(err.Error())
 		}
-		fmt.Println("Error in get: ", err)
+		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{
 		Status:        status,
@@ -43,7 +44,7 @@ func handlePOST(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManag
 			status = httpparser.StatusInternalServerError
 		}
 		body = []byte(err.Error())
-		fmt.Println("Error in post: ", err)
+		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
@@ -59,7 +60,7 @@ func handlePUT(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileManage
 			status = httpparser.StatusInternalServerError
 			body = []byte(err.Error())
 		}
-		fmt.Println("Error in put: ", err)
+		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
@@ -76,22 +77,29 @@ func handleDELETE(c net.Conn, req *httpparser.HttpFrame, fm *filemanager.FileMan
 			status = httpparser.StatusInternalServerError
 			body = []byte(err.Error())
 		}
-		fmt.Println("Error in delete: ", err)
+		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
 
 func handleConnection(c net.Conn, fm *filemanager.FileManager) {
 	defer c.Close()
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+	log.Printf("Serving %s\n", c.RemoteAddr().String())
 	req, err := httpserver.ReadRequest(c)
 	if err != nil {
-		// TODO handle error
-		fmt.Println("Closing: ", err)
-		c.Write([]byte(err.Error()))
+		log.Println("Closing due to unexpected error: ", err)
+		httpserver.WriteResponse(c, &httpparser.HttpResponse{
+			Status: httpparser.StatusInternalServerError,
+			Body:   []byte(err.Error())})
 		return
 	}
-	req.Header.URI = req.Header.URI[1:] + ".json"
+	log.Println(req.Raw)
+	if !req.IsValid() {
+		log.Println("Closing due to invalid HTTP request: ", req.Header.URI)
+		httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusBadRequest})
+		return
+	}
+	req.Header.URI = req.Header.URI + ".json"
 
 	switch req.Header.Method {
 	case httpparser.MethodGet:
