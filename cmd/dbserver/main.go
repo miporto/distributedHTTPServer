@@ -115,7 +115,7 @@ func handleConnection(c net.Conn, fm *filemanager.FileManager) {
 
 func main() {
 	if len(os.Args) != 4 {
-		fmt.Println("Wrong number of args\n Usage: ./dbserver <address>")
+		fmt.Println("Wrong number of args\n Usage: ./dbserver <address> <lock pool size> <cache size>")
 		return
 	}
 	lockpoolSize, _ := strconv.Atoi(os.Args[2])

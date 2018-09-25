@@ -83,7 +83,7 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	workers := 4000
+	workers := 200
 	wg.Add(workers)
 	for i := 0; i < (workers / 2); i++ {
 		go postWorker(os.Args[1], &wg)

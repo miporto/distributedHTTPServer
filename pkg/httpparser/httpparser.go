@@ -76,7 +76,7 @@ func GetMethod(s string) string {
 }
 
 func GetURI(s string) string {
-	if !matchs(clengthRegex, s) {
+	if !matchs(uriRegex, s) {
 		return ""
 	}
 	return findSubmatch(uriRegex, s)[1]

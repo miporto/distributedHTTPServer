@@ -1,8 +1,9 @@
 package cache
 
 import (
-	"github.com/manuporto/distributedHTTPServer/pkg/util"
 	"sync"
+
+	"github.com/manuporto/distributedHTTPServer/pkg/util"
 )
 
 type cacheEntry struct {
@@ -18,6 +19,9 @@ type Cache struct {
 
 func NewCache(size uint) Cache {
 	slots := make([]*cacheEntry, size)
+	if size == 0 {
+		return Cache{slots, size}
+	}
 	for i := uint(0); i < size; i++ {
 		var ce cacheEntry
 		slots[i] = &ce
@@ -26,6 +30,9 @@ func NewCache(size uint) Cache {
 }
 
 func (c Cache) Get(path string) ([]byte, bool) {
+	if c.size == 0 {
+		return nil, false
+	}
 	pathHash := util.CalculateHash(path)
 	slot := c.slots[pathHash%c.size]
 	slot.RLock()
@@ -37,6 +44,9 @@ func (c Cache) Get(path string) ([]byte, bool) {
 }
 
 func (c Cache) Update(path string, body []byte) {
+	if c.size == 0 {
+		return
+	}
 	pathHash := util.CalculateHash(path)
 	slot := c.slots[pathHash%c.size]
 	slot.Lock()
@@ -46,6 +56,9 @@ func (c Cache) Update(path string, body []byte) {
 }
 
 func (c Cache) Delete(path string) {
+	if c.size == 0 {
+		return
+	}
 	pathHash := util.CalculateHash(path)
 	slot := c.slots[pathHash%c.size]
 	slot.Lock()

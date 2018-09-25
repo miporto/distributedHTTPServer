@@ -16,6 +16,9 @@ import (
 )
 
 func calculateDestServer(uri string, dbServerName string, port string, numOfDbServers int) string {
+	if dbServerName == "localhost" {
+		return dbServerName + port
+	}
 	uriHash := util.CalculateHash(uri)
 	dbnum := strconv.Itoa(int(uriHash)%numOfDbServers + 1)
 	return dbServerName + dbnum + port
