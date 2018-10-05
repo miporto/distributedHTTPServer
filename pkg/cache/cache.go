@@ -2,36 +2,34 @@ package cache
 
 import (
 	"sync"
-
-	"github.com/manuporto/distributedHTTPServer/pkg/util"
 )
 
 type cacheEntry struct {
-	sync.RWMutex
 	path string
 	body []byte
 }
 
 type Cache struct {
-	l     *sync.RWMutex
-	slots []*cacheEntry
-	size  uint
+	l       *sync.RWMutex
+	slots   []*cacheEntry
+	size    uint
+	toEvict uint
 }
 
 func NewCache(size uint) Cache {
 	slots := make([]*cacheEntry, size)
 	var l sync.RWMutex
 	if size == 0 {
-		return Cache{&l, slots, size}
+		return Cache{&l, slots, size, 0}
 	}
 	for i := uint(0); i < size; i++ {
 		var ce cacheEntry
 		slots[i] = &ce
 	}
-	return Cache{&l, slots, size}
+	return Cache{&l, slots, size, 0}
 }
 
-func (c *Cache) Get2(path string) ([]byte, bool) {
+func (c *Cache) Get(path string) ([]byte, bool) {
 	if c.size == 0 {
 		return nil, false
 	}
@@ -47,20 +45,6 @@ func (c *Cache) Get2(path string) ([]byte, bool) {
 	return nil, false
 }
 
-func (c Cache) Get(path string) ([]byte, bool) {
-	if c.size == 0 {
-		return nil, false
-	}
-	pathHash := util.CalculateHash(path)
-	slot := c.slots[pathHash%c.size]
-	slot.RLock()
-	defer slot.RUnlock()
-	if path != slot.path {
-		return nil, false
-	}
-	return slot.body, true
-}
-
 func (c *Cache) Insert(path string, body []byte) {
 	if c.size == 0 {
 		return
@@ -74,9 +58,15 @@ func (c *Cache) Insert(path string, body []byte) {
 			return
 		}
 	}
+	c.slots[c.toEvict%c.size].path = path
+	c.slots[c.toEvict%c.size].body = body
+	c.toEvict++
+	if c.toEvict == c.size {
+		c.toEvict = 0
+	}
 }
 
-func (c *Cache) Update2(path string, body []byte) {
+func (c *Cache) Update(path string, body []byte) {
 	if c.size == 0 {
 		return
 	}
@@ -90,19 +80,7 @@ func (c *Cache) Update2(path string, body []byte) {
 	}
 }
 
-func (c Cache) Update(path string, body []byte) {
-	if c.size == 0 {
-		return
-	}
-	pathHash := util.CalculateHash(path)
-	slot := c.slots[pathHash%c.size]
-	slot.Lock()
-	defer slot.Unlock()
-	slot.path = path
-	slot.body = body
-}
-
-func (c *Cache) Delete2(path string) {
+func (c *Cache) Delete(path string) {
 	if c.size == 0 {
 		return
 	}
@@ -115,16 +93,4 @@ func (c *Cache) Delete2(path string) {
 			return
 		}
 	}
-}
-
-func (c Cache) Delete(path string) {
-	if c.size == 0 {
-		return
-	}
-	pathHash := util.CalculateHash(path)
-	slot := c.slots[pathHash%c.size]
-	slot.Lock()
-	defer slot.Unlock()
-	slot.path = ""
-	slot.body = nil
 }
