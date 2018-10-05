@@ -23,9 +23,12 @@ func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
 func (fm FileManager) Save(filepath string, body []byte) error {
 	l := fm.lp.GetLock(filepath)
 	l.Lock()
+	defer l.Unlock()
 	err := saveFile(filepath, body)
+	if err != nil {
+		return err
+	}
 	fm.cch.Update(filepath, body)
-	l.Unlock()
 	return err
 }
 
