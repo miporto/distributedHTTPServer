@@ -3,22 +3,33 @@ services:
   web:
     build:
       context: .
-      dockerfile: webServerDockerfile
+      dockerfile: webserver.Dockerfile
     environment:
       - DBSRVNAME=distributedhttpserver_db_
       - DBSRVPORT=:8081
-      - DBSRVS=2
+      - DBSRVS=1
+      - LOGSRV= distributedhttpserver_log_1:8082
     depends_on:
+      - log
       - db
     ports:
       - "8080:8080"
     networks:
       - backend
 
+  log:
+    build:
+      context: .
+      dockerfile: logserver.Dockerfile
+    environment:
+      - LOGFILE=log.txt
+    networks:
+      - backend
+
   db:
     build:
       context: .
-      dockerfile: dbServerDockerfile
+      dockerfile: dbserver.Dockerfile
     networks:
       - backend
 
