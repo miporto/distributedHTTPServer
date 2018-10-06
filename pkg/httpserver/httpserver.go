@@ -71,7 +71,7 @@ func WriteResponse(c net.Conn, res *httpparser.HttpResponse) {
 	c.Write([]byte(stringRes.String()))
 }
 
-func (hs HttpServer) ListenAndServe(address string, handler func(net.Conn)) {
-	hs.s = server.Server{address, handler}
-	hs.s.Serve()
-}
+//func (hs HttpServer) ListenAndServe(address string, handler func(net.Conn)) {
+//	hs.s = server.NewServer(address, handler)
+//	hs.s.Serve()
+//}

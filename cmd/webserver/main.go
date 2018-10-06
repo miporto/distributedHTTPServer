@@ -71,6 +71,8 @@ func main() {
 		return
 	}
 	logger.NewLogger("log.txt")
-	sv := server.NewServer(os.Args[1], handleConnection)
+	logCh := make(chan string, 1000)
+	ws := NewWebServer(logCh)
+	sv := server.NewServer(os.Args[1], &ws)
 	sv.Serve()
 }
