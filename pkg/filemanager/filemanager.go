@@ -10,8 +10,8 @@ import (
 )
 
 type FileManager struct {
-	lp  lockpool.LockPool
-	cch cache.Cache
+	locks lockpool.LockPool
+	cache cache.Cache
 }
 
 func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
@@ -20,54 +20,54 @@ func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
 	return FileManager{lp, cch}
 }
 
-func (fm FileManager) Save(filepath string, body []byte) error {
-	l := fm.lp.GetLock(filepath)
+func (fm *FileManager) Save(filepath string, body []byte) error {
+	l := fm.locks.GetLock(filepath)
 	l.Lock()
 	defer l.Unlock()
 	err := saveFile(filepath, body)
 	if err != nil {
 		return err
 	}
-	fm.cch.Update(filepath, body)
+	fm.cache.Update(filepath, body)
 	return err
 }
 
-func (fm FileManager) Load(filepath string) ([]byte, error) {
-	if body, ok := fm.cch.Get(filepath); ok {
+func (fm *FileManager) Load(filepath string) ([]byte, error) {
+	if body, ok := fm.cache.Get(filepath); ok {
 		return body, nil
 	}
-	l := fm.lp.GetLock(filepath)
+	l := fm.locks.GetLock(filepath)
 	l.RLock()
 	defer l.RUnlock()
 	body, err := loadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
-	fm.cch.Update(filepath, body)
+	fm.cache.Insert(filepath, body)
 	return body, nil
 }
 
-func (fm FileManager) Update(filepath string, body []byte) error {
-	l := fm.lp.GetLock(filepath)
+func (fm *FileManager) Update(filepath string, body []byte) error {
+	l := fm.locks.GetLock(filepath)
 	l.Lock()
 	defer l.Unlock()
 	err := updateFile(filepath, body)
 	if err != nil {
 		return err
 	}
-	fm.cch.Update(filepath, body)
+	fm.cache.Update(filepath, body)
 	return nil
 }
 
-func (fm FileManager) Delete(filepath string) error {
-	l := fm.lp.GetLock(filepath)
+func (fm *FileManager) Delete(filepath string) error {
+	l := fm.locks.GetLock(filepath)
 	l.Lock()
 	defer l.Unlock()
 	err := os.Remove(filepath)
 	if err != nil {
 		return err
 	}
-	fm.cch.Delete(filepath)
+	fm.cache.Delete(filepath)
 	return nil
 }
 
