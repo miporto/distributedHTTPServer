@@ -15,14 +15,23 @@ func NewMessageSender(address string, msgCh <-chan string) *MessageSender {
 	return &MessageSender{address: address, msgCh: msgCh}
 }
 
-func (ms *MessageSender) start() {
-	c, err := net.Dial("tcp4", ms.address)
+func (ms *MessageSender) Start() {
+	c, err := net.Dial("tcp4", "distributedhttpserver_log_1:8082")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("MessageSender error: ", err)
 		return
 	}
+	defer c.Close()
 	for msg := range ms.msgCh {
-		binary.Write(c, binary.LittleEndian, len(msg)) // check error
-		c.Write([]byte(msg))                           //error
+		msgLen := uint32(len(msg))
+		fmt.Println("Sending ", msg, " with length ", msgLen)
+		err := binary.Write(c, binary.LittleEndian, msgLen) // check error
+		if err != nil {
+			fmt.Println("Error when sending size: ", err)
+		}
+		n, err := c.Write([]byte(msg)) //error
+		if n < int(msgLen) || err != nil {
+			fmt.Println("Error when sending message: ", err, "bytes sent: ", n)
+		}
 	}
 }
