@@ -14,7 +14,8 @@ type Logger struct {
 var instance *Logger
 var once sync.Once
 
-func newLogger(file string) {
+func GetInstance() *Logger {
+	file := os.Getenv("LOGFILE")
 	once.Do(func() {
 		logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -23,15 +24,6 @@ func newLogger(file string) {
 		logger := log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile)
 		instance = &Logger{logger: logger, logFile: logFile}
 	})
-}
-
-func NewLogger(file string) *Logger {
-	newLogger(file)
-	return instance
-}
-
-func GetInstance() *Logger {
-	newLogger("log.txt")
 	return instance
 }
 
