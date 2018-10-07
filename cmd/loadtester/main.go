@@ -37,43 +37,41 @@ func generateRandomURI() string {
 
 func getWorker(url string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	start := time.Now()
-	fullUrl := url + generateRandomURI()
-	resp, err := http.Get(fullUrl)
-	if err != nil {
-		log.Printf("ERROR: [GET %s] failed due to %s", fullUrl, err.Error())
-		return
-	}
-	defer resp.Body.Close()
+	for i := 0; i < 100; i++ {
+		start := time.Now()
+		fullUrl := url + generateRandomURI()
+		resp, err := http.Get(fullUrl)
+		if err != nil {
+			log.Printf("ERROR: [GET %s] failed due to %s", fullUrl, err.Error())
+			return
+		}
+		defer resp.Body.Close()
 
-	secs := time.Since(start).Seconds()
-	log.Printf("INFO: [GET %s] Elapsed: %v response status: %s", fullUrl, secs, resp.Status)
-	//body, err := ioutil.ReadAll(resp.Body)
-	//if err != nil {
-	//	log.Printf("ERROR: [%s] failed due to %s", fullUrl, err.Error())
-	//	return
-	//}
-	//log.Println(string(body))
+		secs := time.Since(start).Seconds()
+		log.Printf("INFO: [GET %s] Elapsed: %v response status: %s", fullUrl, secs, resp.Status)
+	}
 }
 
 func postWorker(url string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	start := time.Now()
-	fullUrl := url + generateRandomURI()
-	var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
-	req, err := http.NewRequest("POST", fullUrl, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
+	for i := 0; i < 100; i++ {
+		start := time.Now()
+		fullUrl := url + generateRandomURI()
+		var jsonStr = []byte(`{"title":"Buy cheese and bread for breakfast."}`)
+		req, err := http.NewRequest("POST", fullUrl, bytes.NewBuffer(jsonStr))
+		req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("ERROR: [POST %s] failed due to %s", fullUrl, err.Error())
-		return
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("ERROR: [POST %s] failed due to %s", fullUrl, err.Error())
+			return
+		}
+		defer resp.Body.Close()
+
+		secs := time.Since(start).Seconds()
+		log.Printf("INFO: [POST %s] Elapsed: %v response status: %s", fullUrl, secs, resp.Status)
 	}
-	defer resp.Body.Close()
-
-	secs := time.Since(start).Seconds()
-	log.Printf("INFO: [POST %s] Elapsed: %v response status: %s", fullUrl, secs, resp.Status)
 }
 
 func main() {
@@ -85,8 +83,13 @@ func main() {
 	var wg sync.WaitGroup
 	workers := 200
 	wg.Add(workers)
-	for i := 0; i < (workers / 2); i++ {
+	for i := 0; i < workers; i++ {
 		go postWorker(os.Args[1], &wg)
+	}
+	wg.Wait()
+
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
 		go getWorker(os.Args[1], &wg)
 	}
 	wg.Wait()
