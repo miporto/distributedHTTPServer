@@ -1,16 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"github.com/manuporto/distributedHTTPServer/pkg/messagesender"
 	"github.com/manuporto/distributedHTTPServer/pkg/server"
+	"log"
 	"os"
 )
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Println("Wrong number of args\n Usage: ./dbserver <address>")
-		return
+		log.Fatalln("Wrong number of args\n Usage: ./dbserver <address>")
 	}
 	logCh := make(chan string, 1000)
 	defer close(logCh)

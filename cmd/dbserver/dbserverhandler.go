@@ -29,7 +29,7 @@ func (dbs *DbServer) handleGET(c net.Conn, req *httpparser.HttpFrame) {
 			status = httpparser.StatusInternalServerError
 			body = []byte(err.Error())
 		}
-		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
+		log.Printf("ERROR: [Conn %v] %s\n", c.RemoteAddr(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{
 		Status:        status,
@@ -50,7 +50,7 @@ func (dbs *DbServer) handlePOST(c net.Conn, req *httpparser.HttpFrame) {
 			status = httpparser.StatusInternalServerError
 		}
 		body = []byte(err.Error())
-		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
+		log.Printf("ERROR: [Conn %v] %s\n", c.RemoteAddr(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
@@ -66,7 +66,7 @@ func (dbs *DbServer) handlePUT(c net.Conn, req *httpparser.HttpFrame) {
 			status = httpparser.StatusInternalServerError
 			body = []byte(err.Error())
 		}
-		log.Printf("ERROR: [Conn %s] %s\n", c.RemoteAddr().String(), err)
+		log.Printf("ERROR: [Conn %v] %s\n", c.RemoteAddr(), err)
 	}
 	httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: status, Body: body})
 }
@@ -90,7 +90,7 @@ func (dbs *DbServer) handleDELETE(c net.Conn, req *httpparser.HttpFrame) {
 
 func (dbs *DbServer) Handle(c net.Conn) {
 	defer c.Close()
-	log.Printf("Serving %s\n", c.RemoteAddr().String())
+	log.Printf("Serving %v\n", c.RemoteAddr())
 	req, err := httpserver.ReadRequest(c)
 	if err != nil {
 		log.Println("Closing due to unexpected error: ", err)

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/manuporto/distributedHTTPServer/pkg/logger"
+	"log"
 	"net"
 	"os"
 )
@@ -17,7 +18,7 @@ func handleConnection(c net.Conn) {
 	for {
 		err := binary.Read(c, binary.LittleEndian, &msgLen)
 		if err != nil {
-			fmt.Println("Error in first receive: ", err)
+			logger.Error(fmt.Sprintf("Error in first receive: %s", err))
 			// send error msg
 		}
 		fmt.Println("Received: ", msgLen)
@@ -29,19 +30,16 @@ func handleConnection(c net.Conn) {
 		}
 		_, err = c.Read(msg)
 		if err != nil {
-			fmt.Println("Error in second receive: ", err)
-			// send error msg
+			logger.Error(fmt.Sprintf("Error in second receive: %s", err))
 		}
-		// chequear si es necesario mandar mensaje de ok
-		fmt.Println("Message: ", string(msg)) //loggear
+		fmt.Println("Message: ", string(msg))
 		logger.Info(string(msg))
 	}
 }
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Println("Wrong number of args\n Usage: ./logserver <address>")
-		return
+		log.Fatalln("Wrong number of args\n Usage: ./logserver <address>")
 	}
 	l, err := net.Listen("tcp4", os.Args[1])
 	if err != nil {
