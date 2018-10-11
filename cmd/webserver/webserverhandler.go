@@ -38,9 +38,11 @@ func (ws *WebServer) Handle(c net.Conn) {
 		dbServerName,
 		os.Getenv("DBSRVPORT"),
 		numOfDbServers)
-	ws.logCh <- fmt.Sprintf("HTTP Request: %s with destination: %s", req.Raw, destServer)
-	log.Printf("HTTP Request: %s with destination: %s", req.Raw, destServer)
+	ws.logCh <- fmt.Sprintf("HTTP Request: %s with destination: %s", req.Header.Method, destServer)
+	log.Printf("HTTP Request: %s with destination: %s", req.Header.Method, destServer)
 	res, err := ws.fowardRequest(req, destServer)
+	log.Printf("HTTP Response: %s with code %s", res.Header.Method, res.Header.Status)
+	ws.logCh <- fmt.Sprintf("HTTP Request: %s with destination: %s", req.Header.Method, destServer)
 	if err != nil {
 		ws.logCh <- err.Error()
 		return

@@ -14,14 +14,13 @@ const maxsize = 2048
 func handleConnection(c net.Conn) {
 	defer c.Close()
 	var msgLen uint32
-	log := logger.GetInstance()
+	logg := logger.GetInstance()
 	for {
 		err := binary.Read(c, binary.LittleEndian, &msgLen)
 		if err != nil {
-			log.Error(fmt.Sprintf("Error in first receive: %s", err))
-			// send error msg
+			logg.Error(fmt.Sprintf("Error in first receive: %s", err))
+			continue
 		}
-		fmt.Println("Received: ", msgLen)
 		var msg []byte
 		if msgLen <= maxsize {
 			msg = make([]byte, msgLen)
@@ -30,10 +29,11 @@ func handleConnection(c net.Conn) {
 		}
 		_, err = c.Read(msg)
 		if err != nil {
-			log.Error(fmt.Sprintf("Error in second receive: %s", err))
+			logg.Error(fmt.Sprintf("Error in second receive: %s", err))
+			continue
 		}
-		fmt.Println("Message: ", string(msg))
-		log.Info(string(msg))
+		log.Println("Message: ", string(msg))
+		logg.Info(string(msg))
 	}
 }
 

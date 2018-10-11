@@ -29,7 +29,7 @@ func (s Server) Serve() {
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
-	maxWorkers := 100
+	maxWorkers := 200
 	guard := make(chan struct{}, maxWorkers)
 	for {
 		c, err := l.Accept()

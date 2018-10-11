@@ -99,7 +99,7 @@ func (dbs *DbServer) Handle(c net.Conn) {
 			Body:   []byte(err.Error())})
 		return
 	}
-	log.Println(req.Raw)
+	log.Printf("Received request: %s with URI: %s ", req.Header.Method, req.Header.URI)
 	if !req.IsValid() {
 		log.Println("Closing due to invalid HTTP request: ", req.Header.URI)
 		httpserver.WriteResponse(c, &httpparser.HttpResponse{Status: httpparser.StatusBadRequest})
