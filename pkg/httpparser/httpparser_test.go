@@ -24,10 +24,10 @@ func TestGetMethod(t *testing.T) {
 
 func TestGetURI(t *testing.T) {
 	tests := []testpair{
-		{"GET /test/example/1 HTTP/1.1\nHost: example.net\n\n", "/test/example/1"},
-		{"DELETE /inv4lid/example/1 HTTP/1.1\nHost: localhost:8080\n\n", ""},
+		{"GET /test/example/1 HTTP/1.1\nHost: example.net\n\n", "test/example/1"},
+		{"DELETE /num3ric/example/1 HTTP/1.1\nHost: localhost:8080\n\n", "num3ric/example/1"},
 		{"POST /test/newexample/987 HTTP/1.1\nHost: localhost:8080\nContent-Type: application/json\n\n",
-			"/test/newexample/987"},
+			"test/newexample/987"},
 		{"PUT /test/example/s HTTP/1.1\nHost: localhost:8080\nContent-Type: application/json\n\n", ""},
 	}
 	for _, pair := range tests {
