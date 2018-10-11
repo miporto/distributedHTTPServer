@@ -1,23 +1,27 @@
 package filemanager
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"sync"
 
 	"github.com/manuporto/distributedHTTPServer/pkg/cache"
 	"github.com/manuporto/distributedHTTPServer/pkg/lockpool"
 )
 
 type FileManager struct {
-	locks lockpool.LockPool
-	cache cache.Cache
+	locks     lockpool.LockPool
+	cache     cache.Cache
+	cacheLock *sync.RWMutex
 }
 
 func NewFileManager(lockpoolSize uint, cacheSize uint) FileManager {
 	lp := lockpool.NewLockPool(lockpoolSize)
 	cch := cache.NewCache(cacheSize)
-	return FileManager{lp, cch}
+	var cchLock sync.RWMutex
+	return FileManager{locks: lp, cache: cch, cacheLock: &cchLock}
 }
 
 func (fm *FileManager) Save(filepath string, body []byte) error {
@@ -28,14 +32,22 @@ func (fm *FileManager) Save(filepath string, body []byte) error {
 	if err != nil {
 		return err
 	}
-	fm.cache.Update(filepath, body)
+	fm.cacheLock.Lock()
+	fm.cache.Set(filepath, body)
+	fm.cacheLock.Unlock()
 	return err
 }
 
 func (fm *FileManager) Load(filepath string) ([]byte, error) {
-	if body, ok := fm.cache.Get(filepath); ok {
+	fm.cacheLock.RLock()
+	body, ok := fm.cache.Get(filepath)
+	if ok {
+		fm.cacheLock.RUnlock()
+		fmt.Println(fmt.Sprintf("[FILEMANGER] File %s in cache: %s", filepath, string(body)))
 		return body, nil
 	}
+	fm.cacheLock.RUnlock()
+
 	l := fm.locks.GetLock(filepath)
 	l.RLock()
 	defer l.RUnlock()
@@ -43,7 +55,11 @@ func (fm *FileManager) Load(filepath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fm.cache.Insert(filepath, body)
+
+	fm.cacheLock.Lock()
+	fm.cache.Set(filepath, body)
+	fm.cacheLock.Unlock()
+
 	return body, nil
 }
 
@@ -55,7 +71,9 @@ func (fm *FileManager) Update(filepath string, body []byte) error {
 	if err != nil {
 		return err
 	}
-	fm.cache.Update(filepath, body)
+	fm.cacheLock.Lock()
+	fm.cache.Set(filepath, body)
+	fm.cacheLock.Unlock()
 	return nil
 }
 
@@ -67,7 +85,9 @@ func (fm *FileManager) Delete(filepath string) error {
 	if err != nil {
 		return err
 	}
+	fm.cacheLock.Lock()
 	fm.cache.Delete(filepath)
+	fm.cacheLock.Unlock()
 	return nil
 }
 
