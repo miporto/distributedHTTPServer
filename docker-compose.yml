@@ -33,5 +33,15 @@ services:
     networks:
       - backend
 
+
+#  loadtest:
+#      build:
+#        context: .
+#        dockerfile: loadtester.DockerFile
+#      depends_on:
+#        - web
+#      networks:
+#        - backend
+
 networks:
   backend:

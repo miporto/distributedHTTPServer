@@ -7,4 +7,4 @@ WORKDIR /go/src/github.com/manuporto/distributedHTTPServer/
 RUN go install -v ./...
 
 
-CMD ["loadtester", "http://localhost:8080"]
+CMD ["loadtester", "http://distributedhttpserver_web_1:8080"]
